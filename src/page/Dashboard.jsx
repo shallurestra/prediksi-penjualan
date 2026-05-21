@@ -43,12 +43,12 @@ function StatCard({ label, value, sub, icon: Icon, accent = "#ef4444" }) {
 
 // ─── Cluster badge ─────────────────────────────────────────────────────────
 const CLUSTER_STYLE = {
-  "Laku Tinggi": { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#34d399" },
-  "Laku Sedang": { bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", text: "#fbbf24" },
-  "Laku Rendah": { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)",  text: "#f87171" },
+  Tinggi:  { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#34d399" },
+  Sedang:  { bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", text: "#fbbf24" },
+  Rendah:  { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)",  text: "#f87171" },
 };
 function ClusterBadge({ label }) {
-  const s = CLUSTER_STYLE[label] || CLUSTER_STYLE["Laku Sedang"];
+  const s = CLUSTER_STYLE[label] || CLUSTER_STYLE["Sedang"];
   return (
     <span
       className="inline-flex px-2.5 py-1 rounded-lg text-xs font-bold"
@@ -103,6 +103,7 @@ export default function Dashboard({
   };
 
   const chartOptions = {
+    responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
@@ -120,6 +121,7 @@ export default function Dashboard({
   };
 
   // ── Chart: elbow ──────────────────────────────────────────────────────────
+  // Backend returns [{k, inertia}, ...] array
   const elbowChartData = {
     labels: elbowData.map((e) => `k=${e.k}`),
     datasets: [
@@ -138,8 +140,11 @@ export default function Dashboard({
   };
 
   // ── Chart: cluster donut ──────────────────────────────────────────────────
-  const clusterCounts = { "Laku Tinggi": 0, "Laku Sedang": 0, "Laku Rendah": 0 };
-  clusteredData.forEach((d) => { if (clusterCounts[d.Label_Cluster] !== undefined) clusterCounts[d.Label_Cluster]++; });
+  // Backend returns cluster = "Rendah"/"Sedang"/"Tinggi"
+  const clusterCounts = { Tinggi: 0, Sedang: 0, Rendah: 0 };
+  clusteredData.forEach((d) => {
+    if (clusterCounts[d.cluster] !== undefined) clusterCounts[d.cluster]++;
+  });
 
   const donutData = {
     labels: Object.keys(clusterCounts),
@@ -155,6 +160,7 @@ export default function Dashboard({
   };
 
   const donutOptions = {
+    responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
@@ -260,7 +266,7 @@ export default function Dashboard({
             </div>
             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           </div>
-          <div className="h-56">
+          <div className="h-56 min-h-[180px]">
             {dailyAggregated.length > 0
               ? <Line data={dailyChartData} options={chartOptions} />
               : <div className="flex items-center justify-center h-full text-white/20 text-sm">Tidak ada data</div>}
@@ -271,7 +277,7 @@ export default function Dashboard({
         <DarkCard>
           <h2 className="text-sm font-semibold text-white mb-1">Distribusi Cluster</h2>
           <p className="text-xs text-white/30 mb-4">Hasil K-Means (k=3)</p>
-          <div className="h-56">
+          <div className="h-56 min-h-[180px]">
             {clusteredData.length > 0
               ? <Doughnut data={donutData} options={donutOptions} />
               : <div className="flex items-center justify-center h-full text-white/20 text-sm">Belum ada data cluster</div>}
@@ -285,7 +291,7 @@ export default function Dashboard({
         <DarkCard>
           <h2 className="text-sm font-semibold text-white mb-1">Elbow Method</h2>
           <p className="text-xs text-white/30 mb-4">Penentuan nilai K optimal</p>
-          <div className="h-44">
+          <div className="h-44 min-h-[140px]">
             {elbowData.length > 0
               ? <Line data={elbowChartData} options={chartOptions} />
               : <div className="flex items-center justify-center h-full text-white/20 text-sm">Belum ada data elbow</div>}
@@ -307,11 +313,11 @@ export default function Dashboard({
                   style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
                 >
                   <div className="flex items-center gap-3">
-                    <ClusterBadge label={s.Label_Cluster} />
-                    <span className="text-xs text-white/40">{s.Jumlah_Produk} produk</span>
+                    <ClusterBadge label={s.label} />
+                    <span className="text-xs text-white/40">{s.count} hari</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-white">{Math.round(s.Rata_Total_Terjual).toLocaleString("id-ID")}</p>
+                    <p className="text-sm font-semibold text-white">{Math.round(s.avgTerjual).toLocaleString("id-ID")}</p>
                     <p className="text-[10px] text-white/30">rata terjual</p>
                   </div>
                 </div>
@@ -334,10 +340,10 @@ export default function Dashboard({
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Total Baris",    value: preprocessSummary?.total_rows    ?? datasetInfo?.total_rows    ?? "—" },
-              { label: "Produk Unik",    value: preprocessSummary?.unique_items  ?? datasetInfo?.unique_items  ?? "—" },
-              { label: "Rentang Tanggal",value: preprocessSummary?.date_range    ?? datasetInfo?.date_range    ?? "—" },
-              { label: "Missing Values", value: preprocessSummary?.missing_values ?? datasetInfo?.missing_values ?? "0" },
+              { label: "Total Baris",     value: preprocessSummary?.total       ?? datasetInfo?.total_baris    ?? "—" },
+              { label: "Produk Unik",     value: preprocessSummary?.uniqueProducts ?? datasetInfo?.total_produk_unik ?? "—" },
+              { label: "Rentang Tanggal", value: preprocessSummary ? `${preprocessSummary.startDate || ''} s/d ${preprocessSummary.endDate || ''}` : (datasetInfo ? `${datasetInfo.tanggal_mulai || ''} s/d ${datasetInfo.tanggal_akhir || ''}` : "—") },
+              { label: "Hari Unik",       value: preprocessSummary?.uniqueCategories ?? datasetInfo?.total_hari ?? "0" },
             ].map((item) => (
               <div
                 key={item.label}

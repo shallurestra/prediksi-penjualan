@@ -28,6 +28,24 @@ export async function getProducts() {
   return apiFetch("/api/products");
 }
 
+// ── NEW: Activity Log ────────────────────────────────────────────────────────
+export async function fetchActivityLog(limit = 50) {
+  return apiFetch(`/api/activity-log?limit=${limit}`);
+}
+
+// ── NEW: Datasets ────────────────────────────────────────────────────────────
+export async function fetchDatasets() {
+  return apiFetch("/api/datasets");
+}
+
+export async function fetchDatasetDetail(datasetId) {
+  return apiFetch(`/api/datasets/${datasetId}`);
+}
+
+export async function fetchDatasetAnalysis(datasetId) {
+  return apiFetch(`/api/datasets/${datasetId}/analyze`);
+}
+
 // Aliases for backward compatibility
 export const fetchFullData = getFullData;
 export const fetchDatasetInfo = getDatasetInfo;

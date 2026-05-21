@@ -23,6 +23,7 @@ import Dashboard   from "./page/Dashboard";
 import Forecasting from "./page/Forecasting";
 import Report      from "./page/Report";
 import History     from "./page/History";
+import DatasetDetail from "./page/DatasetDetail";
 
 import { apiFetch, getToken, setToken, removeToken, getCurrentUserData, setCurrentUserData, clearCurrentUserData } from "./api/client";
 import { login, register, getCurrentUser } from "./api/authService";
@@ -54,6 +55,9 @@ export default function App() {
 
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadMsg, setUploadMsg]         = useState("");
+
+  // ── NEW: Dataset detail view state ────────────────────────────────────────
+  const [selectedDatasetId, setSelectedDatasetId] = useState(null);
 
   const fetchFromAPI = useCallback(async () => {
     setApiLoading(true);
@@ -121,7 +125,7 @@ export default function App() {
     setTransactionRows([]); setDailyAggregated([]); setElbowData([]);
     setResult(null); setFutureForecasts([]); setErrorMsg(""); setApiError("");
     setDatasetInfo(null); removeToken(); clearCurrentUserData();
-    clearStoredAppState(); setLoggedUser(null);
+    clearStoredAppState(); setLoggedUser(null); setSelectedDatasetId(null);
   };
 
   const handleFileUpload = async (e) => {
@@ -151,6 +155,17 @@ export default function App() {
     catch (err) { setErrorMsg(err.message || `Gagal export ${type}.`); }
   };
 
+  // ── Navigate to dataset detail ────────────────────────────────────────────
+  const handleViewDataset = (datasetId) => {
+    setSelectedDatasetId(datasetId);
+    setPage("dataset-detail");
+  };
+
+  const handleBackFromDataset = () => {
+    setSelectedDatasetId(null);
+    setPage("history");
+  };
+
   if (!isLogin) {
     return <AuthPage onLoginSuccess={(user) => { setLoggedUser(user); setIsLogin(true); }} />;
   }
@@ -175,7 +190,7 @@ export default function App() {
           }} />
       </div>
 
-      <Sidebar page={page} setPage={setPage} loggedUser={loggedUser} onLogout={handleLogout} />
+      <Sidebar page={page === "dataset-detail" ? "history" : page} setPage={(p) => { setPage(p); setSelectedDatasetId(null); }} loggedUser={loggedUser} onLogout={handleLogout} />
 
       <div className="flex-1 overflow-auto relative z-10">
         <div className="p-6 min-h-full">
@@ -214,9 +229,13 @@ export default function App() {
           )}
           {page === "history" && (
             <History
-              transactionRows={transactionRows}
-              dailyAggregated={dailyAggregated}
-              onExport={() => handleExport("history")}
+              onViewDataset={handleViewDataset}
+            />
+          )}
+          {page === "dataset-detail" && selectedDatasetId && (
+            <DatasetDetail
+              datasetId={selectedDatasetId}
+              onBack={handleBackFromDataset}
             />
           )}
         </div>

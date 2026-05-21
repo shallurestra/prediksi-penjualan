@@ -19,6 +19,7 @@ function DarkCard({ children, className = "", style = {} }) {
 }
 
 const chartOptions = (yLabel = "") => ({
+  responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
@@ -69,10 +70,11 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
-  const totalPrediksi  = futureForecasts.reduce((s, r) => s + (r.prediksi_terjual || 0), 0);
+  // Backend returns perkiraanTerjual field
+  const totalPrediksi  = futureForecasts.reduce((s, r) => s + (r.perkiraanTerjual || 0), 0);
   const avgPrediksi    = futureForecasts.length ? (totalPrediksi / futureForecasts.length).toFixed(0) : 0;
-  const maxDay         = [...futureForecasts].sort((a, b) => (b.prediksi_terjual || 0) - (a.prediksi_terjual || 0))[0];
-  const minDay         = [...futureForecasts].sort((a, b) => (a.prediksi_terjual || 0) - (b.prediksi_terjual || 0))[0];
+  const maxDay         = [...futureForecasts].sort((a, b) => (b.perkiraanTerjual || 0) - (a.perkiraanTerjual || 0))[0];
+  const minDay         = [...futureForecasts].sort((a, b) => (a.perkiraanTerjual || 0) - (b.perkiraanTerjual || 0))[0];
 
   // ── Line chart ─────────────────────────────────────────────────────────────
   const lineData = {
@@ -80,7 +82,7 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
     datasets: [
       {
         label: "Prediksi Terjual",
-        data: futureForecasts.map((r) => r.prediksi_terjual),
+        data: futureForecasts.map((r) => r.perkiraanTerjual),
         borderColor: "#ef4444",
         backgroundColor: "rgba(239,68,68,0.08)",
         fill: true,
@@ -100,7 +102,7 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
     datasets: [
       {
         label: "Prediksi Terjual",
-        data: futureForecasts.map((r) => r.prediksi_terjual),
+        data: futureForecasts.map((r) => r.perkiraanTerjual),
         backgroundColor: futureForecasts.map((_, i) =>
           i === futureForecasts.indexOf(maxDay) ? "rgba(239,68,68,0.8)" : "rgba(239,68,68,0.25)"
         ),
@@ -191,14 +193,14 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
         <DarkCard>
           <h2 className="text-sm font-semibold text-white mb-1">Tren Prediksi</h2>
           <p className="text-xs text-white/30 mb-4">Proyeksi penjualan harian</p>
-          <div className="h-56">
+          <div className="h-56 min-h-[180px]">
             <Line data={lineData} options={chartOptions("Unit")} />
           </div>
         </DarkCard>
         <DarkCard>
           <h2 className="text-sm font-semibold text-white mb-1">Prediksi per Hari</h2>
           <p className="text-xs text-white/30 mb-4">Perbandingan volume antar hari</p>
-          <div className="h-56">
+          <div className="h-56 min-h-[180px]">
             <Bar data={barData} options={chartOptions("Unit")} />
           </div>
         </DarkCard>
@@ -215,14 +217,14 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
               <tr style={{ background: "rgba(255,255,255,0.02)" }}>
                 <ThCell field="tanggal">Tanggal</ThCell>
                 <ThCell field="hari">Hari</ThCell>
-                <ThCell field="prediksi_terjual">Prediksi Terjual</ThCell>
+                <ThCell field="perkiraanTerjual">Prediksi Terjual</ThCell>
                 <th className="p-4 text-xs font-semibold uppercase tracking-widest text-right"
                   style={{ color: "rgba(255,255,255,0.3)" }}>Kategori</th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((r, i) => {
-                const val = r.prediksi_terjual || 0;
+                const val = r.perkiraanTerjual || 0;
                 const isMax = r === maxDay;
                 return (
                   <tr
@@ -241,7 +243,7 @@ export default function Forecasting({ futureForecasts = [], preprocessSummary, o
                           <div
                             className="h-full rounded-full"
                             style={{
-                              width: `${maxDay?.prediksi_terjual ? (val / maxDay.prediksi_terjual) * 100 : 0}%`,
+                              width: `${maxDay?.perkiraanTerjual ? (val / maxDay.perkiraanTerjual) * 100 : 0}%`,
                               background: isMax ? "#ef4444" : "rgba(239,68,68,0.4)",
                             }}
                           />

@@ -38,6 +38,7 @@ function ClusterBadge({ label }) {
 }
 
 const chartOptions = {
+  responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: { labels: { color: "rgba(255,255,255,0.4)", font: { size: 11 } } },
@@ -191,7 +192,7 @@ export default function Report({ clusteredData, clusterStats, productInsights, p
             <BarChart3 size={16} className="text-red-400" />
             <h2 className="text-sm font-semibold text-white">Pola Permintaan Berdasarkan Nama Hari</h2>
           </div>
-          <div className="h-64">
+          <div className="h-64 min-h-[200px]">
             <Line data={dayAverageChartData} options={chartOptions} />
           </div>
         </DarkCard>
@@ -205,26 +206,29 @@ export default function Report({ clusteredData, clusterStats, productInsights, p
             <h2 className="text-sm font-semibold text-white">Ringkasan per Cluster</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {clusterStats.map((s, i) => (
-              <div key={i} className="p-4 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <ClusterBadge label={s.Label_Cluster} />
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-white/30">Jumlah Produk</span>
-                    <span className="text-xs font-semibold text-white">{s.Jumlah_Produk}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-white/30">Rata Terjual</span>
-                    <span className="text-xs font-semibold text-white">{Math.round(s.Rata_Total_Terjual).toLocaleString("id-ID")}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-white/30">Rata Rasio</span>
-                    <span className="text-xs font-semibold text-white">{(s.Rata_Rasio * 100).toFixed(1)}%</span>
+            {clusterStats.map((s, i) => {
+              const rasio = s.avgStok > 0 ? (s.avgTerjual / s.avgStok) : 0;
+              return (
+                <div key={i} className="p-4 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <ClusterBadge label={s.label} />
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/30">Jumlah Hari</span>
+                      <span className="text-xs font-semibold text-white">{s.count}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/30">Rata Terjual</span>
+                      <span className="text-xs font-semibold text-white">{Math.round(s.avgTerjual).toLocaleString("id-ID")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/30">Rata Rasio</span>
+                      <span className="text-xs font-semibold text-white">{(rasio * 100).toFixed(1)}%</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </DarkCard>
       )}
