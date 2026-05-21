@@ -24,6 +24,7 @@ import Forecasting from "./page/Forecasting";
 import Report      from "./page/Report";
 import History     from "./page/History";
 import DatasetDetail from "./page/DatasetDetail";
+import Planner     from "./page/Planner";
 
 import { apiFetch, getToken, setToken, removeToken, getCurrentUserData, setCurrentUserData, clearCurrentUserData } from "./api/client";
 import { login, register, getCurrentUser } from "./api/authService";
@@ -225,6 +226,13 @@ export default function App() {
               productInsights={result?.productInsights || null}
               preprocessSummary={preprocessSummary}
               onExport={() => handleExport("report")}
+            />
+          )}
+          {page === "planner" && (
+            <Planner
+              clusteredData={result?.clusteredData || []}
+              transactionRows={transactionRows}
+              preprocessSummary={preprocessSummary}
             />
           )}
           {page === "history" && (

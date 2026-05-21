@@ -1,10 +1,11 @@
 import { Home, BarChart3, TrendingUp, Clock3, UserCircle, LogOut, Sparkles } from "lucide-react";
 
 const NAV_ITEMS = [
-  { key: "dashboard",   label: "Dashboard",      icon: Home },
-  { key: "forecasting", label: "Forecasting",    icon: TrendingUp },
-  { key: "report",      label: "Report K-Means", icon: BarChart3 },
-  { key: "history",     label: "History",        icon: Clock3 },
+  { key: "dashboard",   label: "Dashboard",        icon: Home },
+  { key: "forecasting", label: "Forecasting",      icon: TrendingUp },
+  { key: "planner",     label: "Perencanaan Stok", icon: Sparkles },
+  { key: "report",      label: "Report K-Means",   icon: BarChart3 },
+  { key: "history",     label: "History",          icon: Clock3 },
 ];
 
 export default function Sidebar({ page, setPage, loggedUser, onLogout }) {

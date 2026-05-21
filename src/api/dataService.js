@@ -46,6 +46,14 @@ export async function fetchDatasetAnalysis(datasetId) {
   return apiFetch(`/api/datasets/${datasetId}/analyze`);
 }
 
+export async function fetchForecastPeriod(startDate, endDate) {
+  return apiFetch(`/api/forecast/period?start_date=${startDate}&end_date=${endDate}`);
+}
+
+export async function fetchDatasetForecastPeriod(datasetId, startDate, endDate) {
+  return apiFetch(`/api/datasets/${datasetId}/forecast/period?start_date=${startDate}&end_date=${endDate}`);
+}
+
 // Aliases for backward compatibility
 export const fetchFullData = getFullData;
 export const fetchDatasetInfo = getDatasetInfo;
