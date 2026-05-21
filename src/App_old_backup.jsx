@@ -28,7 +28,7 @@ ChartJS.register(
 );
 
 // URL backend Python FastAPI
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "prediksi-penjualan-be-production.up.railway.app";
 
 // Token management
 function getToken() {
@@ -779,9 +779,9 @@ function AuthBrand() {
 function LoginPage({ onLoginSuccess, onGoRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw]     = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setErrorMsg("");
@@ -862,16 +862,16 @@ function LoginPage({ onLoginSuccess, onGoRegister }) {
 
 // ── REGISTER PAGE ─────────────────────────────────────────────────────────────
 function RegisterPage({ onGoLogin }) {
-  const [nama, setNama]               = useState("");
-  const [username, setUsername]       = useState("");
-  const [password, setPassword]       = useState("");
-  const [confirmPw, setConfirmPw]     = useState("");
-  const [showPw, setShowPw]           = useState(false);
-  const [errorMsg, setErrorMsg]       = useState("");
-  const [successMsg, setSuccessMsg]   = useState("");
-  const [loading, setLoading]         = useState(false);
+  const [nama, setNama] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const pwMatch   = confirmPw.length > 0 && password === confirmPw;
+  const pwMatch = confirmPw.length > 0 && password === confirmPw;
   const pwNoMatch = confirmPw.length > 0 && password !== confirmPw;
 
   const handleSubmit = async () => {
@@ -1030,20 +1030,20 @@ function Report({ clusteredData, clusterStats, productInsights, preprocessSummar
     : null;
   const dominantCluster = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
   const dayAverageChartData = daySummary.length
-  ? {
-    labels: daySummary.map((item) => item.hari),
-    datasets: [
-      {
-        label: "Rata-rata Total Terjual",
-        data: daySummary.map((item) => item.rataRataTerjual),
-        borderColor: "#3b82f6",
-        backgroundColor: "rgba(59, 130, 246, 0.2)",
-        fill: true,
-        tension: 0.1,
-      },
-    ],
-  }
-  : null;
+    ? {
+      labels: daySummary.map((item) => item.hari),
+      datasets: [
+        {
+          label: "Rata-rata Total Terjual",
+          data: daySummary.map((item) => item.rataRataTerjual),
+          borderColor: "#3b82f6",
+          backgroundColor: "rgba(59, 130, 246, 0.2)",
+          fill: true,
+          tension: 0.1,
+        },
+      ],
+    }
+    : null;
   const insightRows = selectedDay === "Semua Hari"
     ? productInsights?.enrichedTransactions || []
     : (productInsights?.enrichedTransactions || []).filter((item) => item.hari === selectedDay);
@@ -2020,7 +2020,7 @@ export default function App() {
       setDatasetInfo(info);
       setPreprocessSummary(fullData.preprocessSummary);
 
-      const dailyData   = fullData.dailyAggregated;
+      const dailyData = fullData.dailyAggregated;
       const productRows = analyzeResult.transactionRows || fullData.transactionRows;
 
       if (!dailyData || dailyData.length === 0) throw new Error("Data harian kosong dari server.");
@@ -2029,8 +2029,8 @@ export default function App() {
       setTransactionRows(productRows);
       setElbowData(analyzeResult.elbowData || []);
       setResult({
-        clusteredData:   analyzeResult.clusteredData,
-        stats:           analyzeResult.stats,
+        clusteredData: analyzeResult.clusteredData,
+        stats: analyzeResult.stats,
         productInsights: buildProductSupportInsights(productRows, analyzeResult.clusteredData || []),
       });
       setFutureForecasts(forecastResult.forecasts || []);
@@ -2192,7 +2192,7 @@ export default function App() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href = url;
-      a.download = `${type}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      a.download = `${type}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       a.click(); URL.revokeObjectURL(url);
     } catch (err) {
       setErrorMsg(err.message || `Gagal export ${type}.`);
@@ -2293,15 +2293,14 @@ export default function App() {
                     <h3 className="font-semibold text-slate-800 text-lg">Sumber Data</h3>
                     <p className="text-sm text-slate-500 mb-2">Data diambil langsung dari backend server (dataset.csv)</p>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border ${
-                        apiLoading
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border ${apiLoading
                           ? "bg-amber-50 text-amber-700 border-amber-100"
                           : apiError
-                          ? "bg-red-50 text-red-700 border-red-100"
-                          : dailyAggregated.length > 0
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                          : "bg-slate-50 text-slate-600 border-slate-200"
-                      }`}>
+                            ? "bg-red-50 text-red-700 border-red-100"
+                            : dailyAggregated.length > 0
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              : "bg-slate-50 text-slate-600 border-slate-200"
+                        }`}>
                         {apiLoading ? (
                           <><RefreshCw size={12} className="animate-spin" /> Memuat data...</>
                         ) : apiError ? (
