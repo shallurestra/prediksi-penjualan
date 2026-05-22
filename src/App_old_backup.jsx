@@ -770,7 +770,7 @@ function AuthBrand() {
           ))}
         </div>
       </div>
-      <p className="text-white/25 text-xs">© 2025 Sistem Analisis Penjualan · K-Means</p>
+      <p className="text-white/25 text-xs">© 2026 Sistem Analisis Penjualan · K-Means</p>
     </div>
   );
 }
@@ -853,7 +853,7 @@ function LoginPage({ onLoginSuccess, onGoRegister }) {
               </p>
             </div>
           </div>
-          <p className="text-center text-white/20 text-xs mt-6">© 2025 Sistem Analisis Penjualan</p>
+          <p className="text-center text-white/20 text-xs mt-6">© 2026 Sistem Analisis Penjualan</p>
         </div>
       </div>
     </div>
@@ -981,7 +981,7 @@ function RegisterPage({ onGoLogin }) {
               </p>
             </div>
           </div>
-          <p className="text-center text-white/20 text-xs mt-6">© 2025 Sistem Analisis Penjualan</p>
+          <p className="text-center text-white/20 text-xs mt-6">© 2026 Sistem Analisis Penjualan</p>
         </div>
       </div>
     </div>

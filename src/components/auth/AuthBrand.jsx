@@ -39,7 +39,7 @@ export default function AuthBrand() {
         </div>
       </div>
 
-      <p className="text-white/25 text-xs">© 2025 Sistem Analisis Penjualan · K-Means</p>
+      <p className="text-white/25 text-xs">© 2026 Sistem Analisis Penjualan · K-Means</p>
     </div>
   );
 }

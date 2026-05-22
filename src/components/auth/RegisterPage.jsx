@@ -164,7 +164,7 @@ export default function RegisterPage({ onGoLogin }) {
             </div>
           </div>
 
-          <p className="text-center text-white/20 text-xs mt-6">© 2025 Sistem Analisis Penjualan</p>
+          <p className="text-center text-white/20 text-xs mt-6">© 2026 Sistem Analisis Penjualan</p>
         </div>
       </div>
     </div>

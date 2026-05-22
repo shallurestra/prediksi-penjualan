@@ -156,7 +156,7 @@ export default function Sidebar({ page, setPage, loggedUser, onLogout }) {
             Logout
           </button>
         </div>
-        <p className="text-center text-white/15 text-[10px]">© 2025 Sistem Analisis Penjualan</p>
+        <p className="text-center text-white/15 text-[10px]">© 2026 Sistem Analisis Penjualan</p>
       </div>
     </div>
   );
