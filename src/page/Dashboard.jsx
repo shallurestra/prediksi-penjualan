@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
 import {
   RefreshCw, Upload, Download, AlertTriangle, TrendingUp,
-  Package, BarChart3, Layers, Zap, Activity,
+  Package, BarChart3, Layers, Zap, Activity, Search, Info, ChevronUp, ChevronDown
 } from "lucide-react";
+import { buildDayPatternSummary } from "../components/shared/helpers";
 
 // ─── Reusable dark card ────────────────────────────────────────────────────
 function DarkCard({ children, className = "", style = {} }) {
@@ -161,9 +162,46 @@ export default function Dashboard({
   fetchFromAPI,
   handleDownloadTemplate,
   handleFileUpload,
+  onExportReport,
 }) {
   const clusteredData = result?.clusteredData || [];
   const clusterStats = result?.stats || [];
+
+  // ── STATES UNTUK K-MEANS REPORT YANG DIGABUNGKAN ───────────────────────────
+  const [search, setSearch]       = useState("");
+  const [selectedDay, setSelectedDay] = useState("Semua Hari");
+  const [sortField, setSortField] = useState("tanggal");
+  const [sortDir, setSortDir]     = useState("desc");
+
+  // ── LOGIK FILTER & KUALITAS REPORT ─────────────────────────────────────────
+  const days = ["Semua Hari", ...DAYS_ORDER.filter((d) => clusteredData.some((cd) => cd.hari === d))];
+  const filteredData = selectedDay === "Semua Hari" ? clusteredData : clusteredData.filter((d) => d.hari === selectedDay);
+
+  const counts = { Rendah: 0, Sedang: 0, Tinggi: 0 };
+  filteredData.forEach((d) => { if (counts[d.cluster] !== undefined) counts[d.cluster]++; });
+
+  const daySummary = buildDayPatternSummary(filteredData);
+  const peakDay    = daySummary.length ? [...daySummary].sort((a, b) => b.rataRataTerjual - a.rataRataTerjual)[0] : null;
+  const dominantCluster = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+  const handleSort = (field) => {
+    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortField(field); setSortDir("desc"); }
+  };
+
+  const filteredItems = filteredData
+    .filter((d) => d.tanggal.toLowerCase().includes(search.toLowerCase()) || d.hari.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      let va = a[sortField], vb = b[sortField];
+      if (typeof va === "string") { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  const SortIcon = ({ field }) => sortField === field
+    ? (sortDir === "asc" ? <ChevronUp size={12} className="text-red-400" /> : <ChevronDown size={12} className="text-red-400" />)
+    : <ChevronUp size={12} className="text-white/20" />;
 
   // ── Derived stats ─────────────────────────────────────────────────────────
   const totalTerjual = dailyAggregated.reduce((s, d) => s + (d.Total_Terjual || 0), 0);
@@ -171,65 +209,7 @@ export default function Dashboard({
   const totalHari = dailyAggregated.length;
   const rasioGlobal = totalStok > 0 ? ((totalTerjual / totalStok) * 100).toFixed(1) : "0";
 
-  // ── Chart 1: Line Chart (Tren Permintaan Harian sepanjang Periode) ──
-  const dailyTrendChartData = {
-    labels: dailyAggregated.map((d) => d.tanggal),
-    datasets: [
-      {
-        label: "Total Terjual",
-        data: dailyAggregated.map((d) => d.Total_Terjual),
-        borderColor: "#ef4444",
-        backgroundColor: "rgba(239,68,68,0.08)",
-        fill: true,
-        tension: 0.4,
-        pointRadius: dailyAggregated.length > 80 ? 1 : 2.5,
-        borderWidth: 2,
-      },
-      {
-        label: "Total Stok",
-        data: dailyAggregated.map((d) => d.Total_Stok),
-        borderColor: "#3b82f6",
-        backgroundColor: "rgba(59,130,246,0.04)",
-        fill: true,
-        tension: 0.4,
-        pointRadius: dailyAggregated.length > 80 ? 1 : 2.5,
-        borderWidth: 2,
-      }
-    ],
-  };
 
-  // ── Chart 2: Histogram/Bar Chart (Rata-rata per Nama Hari) ──
-  const daySummary = DAYS_ORDER.map((day) => {
-    const rows = clusteredData.filter((item) => item.hari === day);
-    if (rows.length === 0) return null;
-    const avgTerjual = rows.reduce((s, i) => s + i.Total_Terjual, 0) / rows.length;
-    const avgStok = rows.reduce((s, i) => s + i.Total_Stok, 0) / rows.length;
-    return { hari: day, avgTerjual, avgStok };
-  }).filter(Boolean);
-
-  const dayAverageBarChartData = daySummary.length
-    ? {
-      labels: daySummary.map((item) => item.hari),
-      datasets: [
-        {
-          label: "Rata-rata Terjual",
-          data: daySummary.map((item) => item.avgTerjual),
-          backgroundColor: "rgba(239, 68, 68, 0.75)",
-          borderColor: "#ef4444",
-          borderWidth: 1.5,
-          borderRadius: 6,
-        },
-        {
-          label: "Rata-rata Stok",
-          data: daySummary.map((item) => item.avgStok),
-          backgroundColor: "rgba(59, 130, 246, 0.6)",
-          borderColor: "#3b82f6",
-          borderWidth: 1.5,
-          borderRadius: 6,
-        }
-      ],
-    }
-    : null;
 
   const chartOptions = {
     responsive: true,
@@ -384,54 +364,160 @@ export default function Dashboard({
         <StatCard label="Rasio Terjual" value={`${rasioGlobal}%`} icon={Zap} accent="#f59e0b" />
       </div>
 
-      {/* ── Visualisasi Pengujian Sistem ── */}
+      {/* ── K-Means Report & Daily Cluster Table ── */}
       {clusteredData.length > 0 && (
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={18} className="text-red-400" />
-            <h2 className="text-base font-bold text-white">Visualisasi Pengujian Sistem K-Means </h2>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 1) Line Chart Tren Permintaan Harian */}
-            <DarkCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-white">1) Tren Permintaan Harian sepanjang Periode</h3>
-                  <p className="text-[11px] text-white/30">Line Chart untuk mengamati pergerakan stok dan penjualan harian</p>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              </div>
-              <div className="h-64 min-h-[200px]">
-                <Line data={dailyTrendChartData} options={{ ...chartOptions, plugins: { legend: { display: true, labels: { color: "rgba(255,255,255,0.4)" } } } }} />
-              </div>
-            </DarkCard>
-
-            {/* 2) Histogram / Bar Chart Rata-rata per Hari */}
-            {dayAverageBarChartData && (
-              <DarkCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">2) Rata-rata Penjualan per Nama Hari</h3>
-                    <p className="text-[11px] text-white/30">Histogram / Bar Chart untuk melihat penjualan rata-rata pada hari Senin–Minggu</p>
-                  </div>
-                </div>
-                <div className="h-64 min-h-[200px]">
-                  <Bar data={dayAverageBarChartData} options={{ ...chartOptions, plugins: { legend: { display: true, labels: { color: "rgba(255,255,255,0.4)" } } } }} />
-                </div>
-              </DarkCard>
+          {/* Header & Excel Export */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <BarChart3 size={18} className="text-red-400" />
+              <h2 className="text-base font-bold text-white">Laporan Pola Klaster K-Means</h2>
+            </div>
+            {onExportReport && (
+              <button
+                onClick={onExportReport}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  background: "rgba(220,38,38,0.15)",
+                  border: "1px solid rgba(220,38,38,0.3)",
+                  color: "#fca5a5",
+                }}
+              >
+                <Download size={15} /> Export Laporan Excel
+              </button>
             )}
           </div>
 
-          {/* 3) Heatmap Relasi Hari dan Kategori Klaster */}
-          <DarkCard className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Layers size={16} className="text-red-400" />
-              <div>
-                <h3 className="text-sm font-semibold text-white">3) Heatmap Relasi Nama Hari & Kategori Klaster</h3>
-                <p className="text-[11px] text-white/30">Mengidentifikasi visual relasi antara hari dengan tingkat permintaan (Rendah, Sedang, Tinggi)</p>
+          {/* Day Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {days.map((day) => (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+                style={
+                  selectedDay === day
+                    ? { background: "rgba(220,38,38,0.8)", border: "1px solid rgba(220,38,38,0.5)", color: "white" }
+                    : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }
+                }
+              >
+                {day}
+              </button>
+            ))}
+          </div>
+
+          {/* Report Stat Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Hari Permintaan Tinggi", value: `${counts.Tinggi} Hari`, accent: "#10b981" },
+              { label: "Hari Permintaan Sedang", value: `${counts.Sedang} Hari`, accent: "#fbbf24" },
+              { label: "Hari Permintaan Rendah", value: `${counts.Rendah} Hari`, accent: "#ef4444" },
+              { label: "Kategori Dominan", value: dominantCluster, sub: peakDay ? `Puncak: ${peakDay.hari}` : "", accent: "#3b82f6" },
+            ].map((s) => (
+              <DarkCard
+                key={s.label}
+                className="p-5"
+                style={{
+                  borderLeft: `3px solid ${s.accent}`,
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid rgba(255,255,255,0.07)`,
+                  borderLeftColor: s.accent,
+                  borderLeftWidth: "3px",
+                }}
+              >
+                <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">{s.label}</p>
+                <p className="text-2xl font-bold text-white">{s.value}</p>
+                {s.sub && <p className="text-xs mt-1" style={{ color: s.accent }}>{s.sub}</p>}
+              </DarkCard>
+            ))}
+          </div>
+
+          {/* Daily Cluster Table */}
+          <DarkCard className="p-0 overflow-hidden">
+            <div
+              className="px-6 py-5 flex items-center justify-between gap-4 flex-wrap"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 size={16} className="text-red-400" />
+                <h2 className="text-sm font-semibold text-white">Rincian Hasil Klaster Harian</h2>
+                <span className="text-xs text-white/25">({filteredItems.length} baris)</span>
+              </div>
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
+                <input
+                  type="text"
+                  placeholder="Cari tanggal / hari..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-52"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.7)",
+                  }}
+                />
               </div>
             </div>
-            <DemandHeatmap clusteredData={clusteredData} />
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                    {[
+                      { field: "tanggal", label: "Tanggal" },
+                      { field: "hari", label: "Hari" },
+                      { field: "Total_Stok", label: "Total Stok" },
+                      { field: "Total_Terjual", label: "Total Terjual" },
+                      { field: "cluster", label: "Kategori" },
+                    ].map(({ field, label }) => (
+                      <th
+                        key={field}
+                        className="p-4 text-xs font-semibold uppercase tracking-widest cursor-pointer select-none"
+                        style={{ color: "rgba(255,255,255,0.3)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                        onClick={() => handleSort(field)}
+                      >
+                        <div className="flex items-center gap-1">
+                          {label}
+                          <SortIcon field={field} />
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-white/25 text-sm italic">
+                        Data tidak ditemukan
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredItems.map((r, i) => (
+                      <tr
+                        key={i}
+                        className="transition-colors"
+                        style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <td className="p-4 text-sm font-medium text-white">{r.tanggal}</td>
+                        <td className="p-4 text-sm text-white/50">{r.hari}</td>
+                        <td className="p-4 text-sm font-semibold text-white/70">
+                          {(r.Total_Stok || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-4 text-sm font-semibold text-white">
+                          {(r.Total_Terjual || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-4">
+                          <ClusterBadge label={r.cluster} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </DarkCard>
         </div>
       )}
