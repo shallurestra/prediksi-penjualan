@@ -127,6 +127,7 @@ export default function App() {
     setResult(null); setFutureForecasts([]); setErrorMsg(""); setApiError("");
     setDatasetInfo(null); removeToken(); clearCurrentUserData();
     clearStoredAppState(); setLoggedUser(null); setSelectedDatasetId(null);
+    setUploadMsg(""); setUploadLoading(false);
   };
 
   const handleFileUpload = async (e) => {
@@ -168,7 +169,18 @@ export default function App() {
   };
 
   if (!isLogin) {
-    return <AuthPage onLoginSuccess={(user) => { setLoggedUser(user); setIsLogin(true); }} />;
+    return (
+      <AuthPage
+        onLoginSuccess={(user) => {
+          setUploadMsg("");
+          setUploadLoading(false);
+          setErrorMsg("");
+          setApiError("");
+          setLoggedUser(user);
+          setIsLogin(true);
+        }}
+      />
+    );
   }
 
   return (
