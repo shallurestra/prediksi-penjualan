@@ -252,7 +252,7 @@ export default function Dashboard({
   // ── Chart: elbow ──────────────────────────────────────────────────────────
   // Backend returns [{k, inertia}, ...] array
   const elbowChartData = {
-    labels: elbowData.map((e) => `k=${e.k}`),
+    labels: elbowData.map((e) => e.k),
     datasets: [
       {
         label: "Inertia",
