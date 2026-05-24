@@ -1,15 +1,15 @@
 import { Home, BarChart3, TrendingUp, Clock3, UserCircle, LogOut, Sparkles } from "lucide-react";
 
 const NAV_ITEMS = [
-  { key: "dashboard",   label: "Dashboard",        icon: Home },
-  { key: "forecasting", label: "Forecasting",      icon: TrendingUp },
-  { key: "planner",     label: "Perencanaan Stok", icon: Sparkles },
-  { key: "report",      label: "Report K-Means",   icon: BarChart3 },
-  { key: "history",     label: "History",          icon: Clock3 },
+  { key: "dashboard", label: "Dashboard", icon: Home },
+  { key: "forecasting", label: "Forecasting", icon: TrendingUp },
+  { key: "planner", label: "Perencanaan Stok", icon: Sparkles },
+  { key: "report", label: "Report K-Means", icon: BarChart3 },
+  { key: "history", label: "History", icon: Clock3 },
 ];
 
 export default function Sidebar({ page, setPage, loggedUser, onLogout }) {
-  const userName   = loggedUser?.nama || loggedUser?.username || "User";
+  const userName = loggedUser?.nama || loggedUser?.username || "User";
   const userHandle = loggedUser?.username || "—";
 
   return (
@@ -59,7 +59,7 @@ export default function Sidebar({ page, setPage, loggedUser, onLogout }) {
             <Sparkles size={18} className="text-red-400 hidden" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white tracking-tight leading-tight">Prediksi Penjualan</h1>
+            <h1 className="text-sm font-bold text-white tracking-tight leading-tight">Analisis Cerdas Penjualan</h1>
             <p className="text-[10px] text-white/30 tracking-widest uppercase">K-Means Analytics</p>
           </div>
         </div>
@@ -79,14 +79,14 @@ export default function Sidebar({ page, setPage, loggedUser, onLogout }) {
                 style={
                   active
                     ? {
-                        background: "rgba(220,38,38,0.15)",
-                        border: "1px solid rgba(220,38,38,0.25)",
-                        boxShadow: "0 0 20px rgba(220,38,38,0.08)",
-                      }
+                      background: "rgba(220,38,38,0.15)",
+                      border: "1px solid rgba(220,38,38,0.25)",
+                      boxShadow: "0 0 20px rgba(220,38,38,0.08)",
+                    }
                     : {
-                        background: "transparent",
-                        border: "1px solid transparent",
-                      }
+                      background: "transparent",
+                      border: "1px solid transparent",
+                    }
                 }
               >
                 {/* Active indicator */}

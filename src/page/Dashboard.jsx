@@ -43,9 +43,9 @@ function StatCard({ label, value, sub, icon: Icon, accent = "#ef4444" }) {
 
 // ─── Cluster badge ─────────────────────────────────────────────────────────
 const CLUSTER_STYLE = {
-  Tinggi:  { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#34d399" },
-  Sedang:  { bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", text: "#fbbf24" },
-  Rendah:  { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.3)",  text: "#f87171" },
+  Tinggi: { bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", text: "#34d399" },
+  Sedang: { bg: "rgba(251,191,36,0.12)", border: "rgba(251,191,36,0.3)", text: "#fbbf24" },
+  Rendah: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)", text: "#f87171" },
 };
 function ClusterBadge({ label }) {
   const s = CLUSTER_STYLE[label] || CLUSTER_STYLE["Sedang"];
@@ -162,14 +162,14 @@ export default function Dashboard({
   handleDownloadTemplate,
   handleFileUpload,
 }) {
-  const clusteredData  = result?.clusteredData  || [];
-  const clusterStats   = result?.stats          || [];
+  const clusteredData = result?.clusteredData || [];
+  const clusterStats = result?.stats || [];
 
   // ── Derived stats ─────────────────────────────────────────────────────────
   const totalTerjual = dailyAggregated.reduce((s, d) => s + (d.Total_Terjual || 0), 0);
-  const totalStok    = dailyAggregated.reduce((s, d) => s + (d.Total_Stok    || 0), 0);
-  const totalHari    = dailyAggregated.length;
-  const rasioGlobal  = totalStok > 0 ? ((totalTerjual / totalStok) * 100).toFixed(1) : "0";
+  const totalStok = dailyAggregated.reduce((s, d) => s + (d.Total_Stok || 0), 0);
+  const totalHari = dailyAggregated.length;
+  const rasioGlobal = totalStok > 0 ? ((totalTerjual / totalStok) * 100).toFixed(1) : "0";
 
   // ── Chart 1: Line Chart (Tren Permintaan Harian sepanjang Periode) ──
   const dailyTrendChartData = {
@@ -209,26 +209,26 @@ export default function Dashboard({
 
   const dayAverageBarChartData = daySummary.length
     ? {
-        labels: daySummary.map((item) => item.hari),
-        datasets: [
-          {
-            label: "Rata-rata Terjual",
-            data: daySummary.map((item) => item.avgTerjual),
-            backgroundColor: "rgba(239, 68, 68, 0.75)",
-            borderColor: "#ef4444",
-            borderWidth: 1.5,
-            borderRadius: 6,
-          },
-          {
-            label: "Rata-rata Stok",
-            data: daySummary.map((item) => item.avgStok),
-            backgroundColor: "rgba(59, 130, 246, 0.6)",
-            borderColor: "#3b82f6",
-            borderWidth: 1.5,
-            borderRadius: 6,
-          }
-        ],
-      }
+      labels: daySummary.map((item) => item.hari),
+      datasets: [
+        {
+          label: "Rata-rata Terjual",
+          data: daySummary.map((item) => item.avgTerjual),
+          backgroundColor: "rgba(239, 68, 68, 0.75)",
+          borderColor: "#ef4444",
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+        {
+          label: "Rata-rata Stok",
+          data: daySummary.map((item) => item.avgStok),
+          backgroundColor: "rgba(59, 130, 246, 0.6)",
+          borderColor: "#3b82f6",
+          borderWidth: 1.5,
+          borderRadius: 6,
+        }
+      ],
+    }
     : null;
 
   const chartOptions = {
@@ -340,7 +340,7 @@ export default function Dashboard({
           >
             {uploadLoading
               ? <><RefreshCw size={15} className="animate-spin" /> Mengupload...</>
-              : <><Upload size={15} /> Upload CSV</>}
+              : <><Upload size={15} /> Upload EXCEL</>}
             <input type="file" accept=".csv,.xlsx" className="hidden" onChange={handleFileUpload} disabled={uploadLoading} />
           </label>
           <button
@@ -378,18 +378,18 @@ export default function Dashboard({
 
       {/* ── Stat cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Terjual"  value={totalTerjual.toLocaleString("id-ID")} icon={TrendingUp} accent="#ef4444" />
-        <StatCard label="Total Stok"     value={totalStok.toLocaleString("id-ID")}    icon={Package}    accent="#3b82f6" />
-        <StatCard label="Hari Tercatat"  value={totalHari}                            icon={Activity}   accent="#8b5cf6" />
-        <StatCard label="Rasio Terjual"  value={`${rasioGlobal}%`}                    icon={Zap}        accent="#f59e0b" />
+        <StatCard label="Total Terjual" value={totalTerjual.toLocaleString("id-ID")} icon={TrendingUp} accent="#ef4444" />
+        <StatCard label="Total Stok" value={totalStok.toLocaleString("id-ID")} icon={Package} accent="#3b82f6" />
+        <StatCard label="Hari Tercatat" value={totalHari} icon={Activity} accent="#8b5cf6" />
+        <StatCard label="Rasio Terjual" value={`${rasioGlobal}%`} icon={Zap} accent="#f59e0b" />
       </div>
 
-      {/* ── Visualisasi Pengujian Sistem (Sesuai Rancangan Bab IV) ── */}
+      {/* ── Visualisasi Pengujian Sistem ── */}
       {clusteredData.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <BarChart3 size={18} className="text-red-400" />
-            <h2 className="text-base font-bold text-white">Visualisasi Pengujian Sistem K-Means (Sesuai Rancangan Bab IV)</h2>
+            <h2 className="text-base font-bold text-white">Visualisasi Pengujian Sistem K-Means </h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 1) Line Chart Tren Permintaan Harian */}
@@ -535,10 +535,10 @@ export default function Dashboard({
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Total Baris",     value: preprocessSummary?.total       ?? datasetInfo?.total_baris    ?? "—" },
-              { label: "Produk Unik",     value: preprocessSummary?.uniqueProducts ?? datasetInfo?.total_produk_unik ?? "—" },
+              { label: "Total Baris", value: preprocessSummary?.total ?? datasetInfo?.total_baris ?? "—" },
+              { label: "Produk Unik", value: preprocessSummary?.uniqueProducts ?? datasetInfo?.total_produk_unik ?? "—" },
               { label: "Rentang Tanggal", value: preprocessSummary ? `${preprocessSummary.startDate || ''} s/d ${preprocessSummary.endDate || ''}` : (datasetInfo ? `${datasetInfo.tanggal_mulai || ''} s/d ${datasetInfo.tanggal_akhir || ''}` : "—") },
-              { label: "Hari Unik",       value: preprocessSummary?.uniqueCategories ?? datasetInfo?.total_hari ?? "0" },
+              { label: "Hari Unik", value: preprocessSummary?.uniqueCategories ?? datasetInfo?.total_hari ?? "0" },
             ].map((item) => (
               <div
                 key={item.label}

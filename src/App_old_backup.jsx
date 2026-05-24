@@ -755,7 +755,7 @@ function AuthBrand() {
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-4">
             Analisis Cerdas<br />
-            <span className="text-red-400">Penjualan Getuk</span>
+            <span className="text-red-400">Penjualan</span>
           </h2>
           <p className="text-white/60 text-sm leading-relaxed max-w-xs">
             Platform analisis berbasis K-Means untuk memahami pola penjualan dan meramalkan permintaan produk.
@@ -2294,12 +2294,12 @@ export default function App() {
                     <p className="text-sm text-slate-500 mb-2">Data diambil langsung dari backend server (dataset.csv)</p>
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border ${apiLoading
-                          ? "bg-amber-50 text-amber-700 border-amber-100"
-                          : apiError
-                            ? "bg-red-50 text-red-700 border-red-100"
-                            : dailyAggregated.length > 0
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                              : "bg-slate-50 text-slate-600 border-slate-200"
+                        ? "bg-amber-50 text-amber-700 border-amber-100"
+                        : apiError
+                          ? "bg-red-50 text-red-700 border-red-100"
+                          : dailyAggregated.length > 0
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-slate-50 text-slate-600 border-slate-200"
                         }`}>
                         {apiLoading ? (
                           <><RefreshCw size={12} className="animate-spin" /> Memuat data...</>

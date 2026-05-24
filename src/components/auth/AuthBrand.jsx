@@ -20,7 +20,7 @@ export default function AuthBrand() {
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-4">
             Analisis Cerdas<br />
-            <span className="text-red-400">Penjualan Getuk</span>
+            <span className="text-red-400">Penjualan</span>
           </h2>
           <p className="text-white/60 text-sm leading-relaxed max-w-xs">
             Platform analisis berbasis K-Means untuk memahami pola penjualan
