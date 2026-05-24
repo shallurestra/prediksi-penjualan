@@ -5,6 +5,7 @@ import {
   BarChart3, Layers, RefreshCw, AlertTriangle, Database, Zap
 } from "lucide-react";
 import { fetchDatasetDetail, fetchDatasetAnalysis } from "../api/dataService";
+import { DAYS_ORDER } from "../components/shared/constants";
 
 function DarkCard({ children, className = "", style = {} }) {
   return (
@@ -64,6 +65,91 @@ const baseChartOptions = {
     },
   },
 };
+
+// ─── Demand Heatmap Component ──────────────────────────────────────────────
+function DemandHeatmap({ clusteredData }) {
+  const heatmapData = DAYS_ORDER.map((day) => {
+    const dayRows = clusteredData.filter((d) => d.hari === day);
+    const counts = { Rendah: 0, Sedang: 0, Tinggi: 0 };
+    dayRows.forEach((d) => {
+      if (counts[d.cluster] !== undefined) {
+        counts[d.cluster]++;
+      }
+    });
+    return {
+      day,
+      total: dayRows.length,
+      counts,
+    };
+  });
+
+  const getHeatmapColor = (cluster, count, total) => {
+    if (total === 0 || count === 0) return "rgba(255,255,255,0.02)";
+    const ratio = count / total;
+    const opacity = 0.12 + ratio * 0.78; // scale opacity beautifully
+    if (cluster === "Tinggi") return `rgba(16, 185, 129, ${opacity})`; // Sleek Green
+    if (cluster === "Sedang") return `rgba(251, 191, 36, ${opacity})`; // Amber/Yellow
+    return `rgba(239, 68, 68, ${opacity})`; // Red
+  };
+
+  const getTextColor = (count, total) => {
+    if (total === 0 || count === 0) return "rgba(255,255,255,0.2)";
+    const ratio = count / total;
+    return ratio > 0.45 ? "#0f172a" : "#ffffff"; // Dark text on bright cell, light text on dark cell
+  };
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/5">
+      <table className="w-full text-center border-collapse">
+        <thead>
+          <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-left text-white/30" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Hari</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-red-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Rendah</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-amber-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Sedang</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-emerald-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Tinggi</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-white/30" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Total Terjadi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {heatmapData.map((row) => (
+            <tr key={row.day} className="border-t border-white/5 transition-colors hover:bg-white/[0.01]">
+              <td className="p-4 text-sm font-medium text-left text-white/80 bg-white/[0.01]">{row.day}</td>
+              {["Rendah", "Sedang", "Tinggi"].map((cluster) => {
+                const count = row.counts[cluster];
+                const pct = row.total > 0 ? (count / row.total) * 100 : 0;
+                const bg = getHeatmapColor(cluster, count, row.total);
+                const textColor = getTextColor(count, row.total);
+
+                return (
+                  <td
+                    key={cluster}
+                    className="p-4 transition-all duration-300 relative group"
+                    style={{ backgroundColor: bg }}
+                  >
+                    {count > 0 ? (
+                      <div className="flex flex-col items-center justify-center" style={{ color: textColor }}>
+                        <span className="text-sm font-extrabold">{count}x</span>
+                        <span className="text-[10px] font-medium opacity-85">{pct.toFixed(0)}%</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-white/10">—</span>
+                    )}
+                    {row.total > 0 && count > 0 && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-30 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-slate-950 border border-white/10 text-white shadow-2xl whitespace-nowrap">
+                        {count} kali ({pct.toFixed(1)}%) bernilai {cluster}
+                      </div>
+                    )}
+                  </td>
+                );
+              })}
+              <td className="p-4 text-sm font-semibold text-white/30 bg-white/[0.01]" style={{ borderLeft: "1px solid rgba(255,255,255,0.03)" }}>{row.total} Hari</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function DatasetDetail({ datasetId, onBack }) {
   const [detail, setDetail] = useState(null);
@@ -333,6 +419,20 @@ export default function DatasetDetail({ datasetId, onBack }) {
               </div>
             ))}
           </div>
+        </DarkCard>
+      )}
+
+      {/* ── Heatmap Relasi Hari & Klaster ───────────────────────────────────── */}
+      {clusteredData.length > 0 && (
+        <DarkCard className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Layers size={16} className="text-red-400" />
+            <div>
+              <h2 className="text-sm font-semibold text-white">Heatmap Relasi Nama Hari & Kategori Klaster</h2>
+              <p className="text-[11px] text-white/30">Mengidentifikasi visual relasi antara hari dengan tingkat permintaan (Rendah, Sedang, Tinggi) dari dataset ini</p>
+            </div>
+          </div>
+          <DemandHeatmap clusteredData={clusteredData} />
         </DarkCard>
       )}
 

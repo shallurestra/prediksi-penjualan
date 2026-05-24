@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 import { BarChart3, Download, Search, Info, Layers, ChevronUp, ChevronDown } from "lucide-react";
 import { formatNumber, getClusterBadgeClasses, buildDayPatternSummary, aggregateRows } from "../components/shared/helpers";
 import { DAYS_ORDER } from "../components/shared/constants";
@@ -64,6 +64,91 @@ const chartOptions = {
   },
 };
 
+// ─── Demand Heatmap Component ──────────────────────────────────────────────
+function DemandHeatmap({ filteredData }) {
+  const heatmapData = DAYS_ORDER.map((day) => {
+    const dayRows = filteredData.filter((d) => d.hari === day);
+    const counts = { Rendah: 0, Sedang: 0, Tinggi: 0 };
+    dayRows.forEach((d) => {
+      if (counts[d.cluster] !== undefined) {
+        counts[d.cluster]++;
+      }
+    });
+    return {
+      day,
+      total: dayRows.length,
+      counts,
+    };
+  });
+
+  const getHeatmapColor = (cluster, count, total) => {
+    if (total === 0 || count === 0) return "rgba(255,255,255,0.02)";
+    const ratio = count / total;
+    const opacity = 0.12 + ratio * 0.78; // scale opacity beautifully
+    if (cluster === "Tinggi") return `rgba(16, 185, 129, ${opacity})`; // Sleek Green
+    if (cluster === "Sedang") return `rgba(251, 191, 36, ${opacity})`; // Amber/Yellow
+    return `rgba(239, 68, 68, ${opacity})`; // Red
+  };
+
+  const getTextColor = (count, total) => {
+    if (total === 0 || count === 0) return "rgba(255,255,255,0.2)";
+    const ratio = count / total;
+    return ratio > 0.45 ? "#0f172a" : "#ffffff"; // Dark text on bright cell, light text on dark cell
+  };
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/5">
+      <table className="w-full text-center border-collapse">
+        <thead>
+          <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-left text-white/30" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Hari</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-red-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Rendah</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-amber-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Sedang</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-emerald-400" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Tinggi</th>
+            <th className="p-4 text-xs font-bold uppercase tracking-widest text-white/30" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>Total Terjadi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {heatmapData.map((row) => (
+            <tr key={row.day} className="border-t border-white/5 transition-colors hover:bg-white/[0.01]">
+              <td className="p-4 text-sm font-medium text-left text-white/80 bg-white/[0.01]">{row.day}</td>
+              {["Rendah", "Sedang", "Tinggi"].map((cluster) => {
+                const count = row.counts[cluster];
+                const pct = row.total > 0 ? (count / row.total) * 100 : 0;
+                const bg = getHeatmapColor(cluster, count, row.total);
+                const textColor = getTextColor(count, row.total);
+
+                return (
+                  <td
+                    key={cluster}
+                    className="p-4 transition-all duration-300 relative group"
+                    style={{ backgroundColor: bg }}
+                  >
+                    {count > 0 ? (
+                      <div className="flex flex-col items-center justify-center" style={{ color: textColor }}>
+                        <span className="text-sm font-extrabold">{count}x</span>
+                        <span className="text-[10px] font-medium opacity-85">{pct.toFixed(0)}%</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-white/10">—</span>
+                    )}
+                    {row.total > 0 && count > 0 && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-30 px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-slate-950 border border-white/10 text-white shadow-2xl whitespace-nowrap">
+                        {count} kali ({pct.toFixed(1)}%) bernilai {cluster}
+                      </div>
+                    )}
+                  </td>
+                );
+              })}
+              <td className="p-4 text-sm font-semibold text-white/30 bg-white/[0.01]" style={{ borderLeft: "1px solid rgba(255,255,255,0.03)" }}>{row.total} Hari</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Report({ clusteredData, clusterStats, productInsights, preprocessSummary, onExport }) {
   const [search, setSearch]       = useState("");
   const [selectedDay, setSelectedDay] = useState("Semua Hari");
@@ -95,22 +180,59 @@ export default function Report({ clusteredData, clusterStats, productInsights, p
   const peakDay    = daySummary.length ? [...daySummary].sort((a, b) => b.rataRataTerjual - a.rataRataTerjual)[0] : null;
   const dominantCluster = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
 
-  const dayAverageChartData = daySummary.length
+  const dailyTrendChartData = {
+    labels: clusteredData.map(d => d.tanggal),
+    datasets: [
+      {
+        label: "Total Terjual Harian",
+        data: clusteredData.map(d => d.Total_Terjual),
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239,68,68,0.08)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2.5,
+        pointBackgroundColor: "#ef4444",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 1,
+        borderWidth: 2,
+      },
+      {
+        label: "Total Stok Harian",
+        data: clusteredData.map(d => d.Total_Stok),
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59,130,246,0.04)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2.5,
+        pointBackgroundColor: "#3b82f6",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 1,
+        borderWidth: 2,
+      }
+    ]
+  };
+
+  const dayAverageBarChartData = daySummary.length
     ? {
         labels: daySummary.map((item) => item.hari),
-        datasets: [{
-          label: "Rata-rata Total Terjual",
-          data: daySummary.map((item) => item.rataRataTerjual),
-          borderColor: "#ef4444",
-          backgroundColor: "rgba(239,68,68,0.08)",
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: "#ef4444",
-          pointBorderColor: "#fff",
-          pointBorderWidth: 2,
-          borderWidth: 2,
-        }],
+        datasets: [
+          {
+            label: "Rata-rata Terjual",
+            data: daySummary.map((item) => item.rataRataTerjual),
+            backgroundColor: "rgba(239, 68, 68, 0.75)",
+            borderColor: "#ef4444",
+            borderWidth: 1.5,
+            borderRadius: 6,
+          },
+          {
+            label: "Rata-rata Stok",
+            data: daySummary.map((item) => item.rataRataStok),
+            backgroundColor: "rgba(59, 130, 246, 0.6)",
+            borderColor: "#3b82f6",
+            borderWidth: 1.5,
+            borderRadius: 6,
+          }
+        ],
       }
     : null;
 
@@ -185,18 +307,50 @@ export default function Report({ clusteredData, clusterStats, productInsights, p
         ))}
       </div>
 
-      {/* ── Chart ──────────────────────────────────────────────────────────── */}
-      {dayAverageChartData && (
+      {/* ── Visualisasi Pengujian Sistem ────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Grafik 1: Line Chart Tren Permintaan Harian */}
         <DarkCard className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={16} className="text-red-400" />
-            <h2 className="text-sm font-semibold text-white">Pola Permintaan Berdasarkan Nama Hari</h2>
+            <div>
+              <h2 className="text-sm font-semibold text-white">1) Tren Permintaan Harian sepanjang Periode</h2>
+              <p className="text-[11px] text-white/30">Line Chart untuk mengamati pergerakan stok dan penjualan harian</p>
+            </div>
           </div>
           <div className="h-64 min-h-[200px]">
-            <Line data={dayAverageChartData} options={chartOptions} />
+            <Line data={dailyTrendChartData} options={chartOptions} />
           </div>
         </DarkCard>
-      )}
+
+        {/* Grafik 2: Histogram/Bar Chart Rata-rata per Nama Hari */}
+        {dayAverageBarChartData && (
+          <DarkCard className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 size={16} className="text-red-400" />
+              <div>
+                <h2 className="text-sm font-semibold text-white">2) Rata-rata Penjualan per Nama Hari</h2>
+                <p className="text-[11px] text-white/30">Bar Chart / Histogram rata-rata penjualan pada hari Senin–Minggu</p>
+              </div>
+            </div>
+            <div className="h-64 min-h-[200px]">
+              <Bar data={dayAverageBarChartData} options={chartOptions} />
+            </div>
+          </DarkCard>
+        )}
+      </div>
+
+      {/* Grafik 3: Heatmap Relasi Hari dan Kategori Klaster */}
+      <DarkCard className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Layers size={16} className="text-red-400" />
+          <div>
+            <h2 className="text-sm font-semibold text-white">3) Heatmap Relasi Nama Hari & Kategori Klaster</h2>
+            <p className="text-[11px] text-white/30">Mengidentifikasi visual relasi antara hari dengan tingkat permintaan (Rendah, Sedang, Tinggi)</p>
+          </div>
+        </div>
+        <DemandHeatmap filteredData={filteredData} />
+      </DarkCard>
 
       {/* ── Cluster summary ────────────────────────────────────────────────── */}
       {clusterStats && clusterStats.length > 0 && (
