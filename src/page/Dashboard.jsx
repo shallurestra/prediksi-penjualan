@@ -209,7 +209,64 @@ export default function Dashboard({
   const totalHari = dailyAggregated.length;
   const rasioGlobal = totalStok > 0 ? ((totalTerjual / totalStok) * 100).toFixed(1) : "0";
 
+  // ── DATA UNTUK GRAFIK K-MEANS ──────────────────────────────────────────────
+  const dailyTrendChartData = {
+    labels: dailyAggregated.map((d) => d.tanggal),
+    datasets: [
+      {
+        label: "Total Terjual",
+        data: dailyAggregated.map((d) => d.Total_Terjual),
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239,68,68,0.08)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: dailyAggregated.length > 80 ? 1 : 2.5,
+        borderWidth: 2,
+      },
+      {
+        label: "Total Stok",
+        data: dailyAggregated.map((d) => d.Total_Stok),
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59,130,246,0.04)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: dailyAggregated.length > 80 ? 1 : 2.5,
+        borderWidth: 2,
+      }
+    ],
+  };
 
+  const dayAverageSummary = DAYS_ORDER.map((day) => {
+    const rows = clusteredData.filter((item) => item.hari === day);
+    if (rows.length === 0) return null;
+    const avgTerjual = rows.reduce((s, i) => s + i.Total_Terjual, 0) / rows.length;
+    const avgStok = rows.reduce((s, i) => s + i.Total_Stok, 0) / rows.length;
+    return { hari: day, avgTerjual, avgStok };
+  }).filter(Boolean);
+
+  const dayAverageBarChartData = dayAverageSummary.length
+    ? {
+      labels: dayAverageSummary.map((item) => item.hari),
+      datasets: [
+        {
+          label: "Rata-rata Terjual",
+          data: dayAverageSummary.map((item) => item.avgTerjual),
+          backgroundColor: "rgba(239, 68, 68, 0.75)",
+          borderColor: "#ef4444",
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+        {
+          label: "Rata-rata Stok",
+          data: dayAverageSummary.map((item) => item.avgStok),
+          backgroundColor: "rgba(59, 130, 246, 0.6)",
+          borderColor: "#3b82f6",
+          borderWidth: 1.5,
+          borderRadius: 6,
+        }
+      ],
+    }
+    : null;
 
   const chartOptions = {
     responsive: true,
@@ -363,6 +420,58 @@ export default function Dashboard({
         <StatCard label="Hari Tercatat" value={totalHari} icon={Activity} accent="#8b5cf6" />
         <StatCard label="Rasio Terjual" value={`${rasioGlobal}%`} icon={Zap} accent="#f59e0b" />
       </div>
+
+      {/* ── Visualisasi Pengujian Sistem Tanpa Nomor ── */}
+      {clusteredData.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <BarChart3 size={18} className="text-red-400" />
+            <h2 className="text-base font-bold text-white">Visualisasi Pengujian Sistem K-Means</h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Line Chart Tren Permintaan Harian */}
+            <DarkCard className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Tren Permintaan Harian sepanjang Periode</h3>
+                  <p className="text-[11px] text-white/30">Line Chart untuk mengamati pergerakan stok dan penjualan harian</p>
+                </div>
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              </div>
+              <div className="h-64 min-h-[200px]">
+                <Line data={dailyTrendChartData} options={{ ...chartOptions, plugins: { legend: { display: true, labels: { color: "rgba(255,255,255,0.4)" } } } }} />
+              </div>
+            </DarkCard>
+
+            {/* Histogram / Bar Chart Rata-rata per Hari */}
+            {dayAverageBarChartData && (
+              <DarkCard className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Rata-rata Penjualan per Nama Hari</h3>
+                    <p className="text-[11px] text-white/30">Histogram / Bar Chart untuk melihat penjualan rata-rata pada hari Senin–Minggu</p>
+                  </div>
+                </div>
+                <div className="h-64 min-h-[200px]">
+                  <Bar data={dayAverageBarChartData} options={{ ...chartOptions, plugins: { legend: { display: true, labels: { color: "rgba(255,255,255,0.4)" } } } }} />
+                </div>
+              </DarkCard>
+            )}
+          </div>
+
+          {/* Heatmap Relasi Hari dan Kategori Klaster */}
+          <DarkCard className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Layers size={16} className="text-red-400" />
+              <div>
+                <h3 className="text-sm font-semibold text-white">Heatmap Relasi Nama Hari & Kategori Klaster</h3>
+                <p className="text-[11px] text-white/30">Mengidentifikasi visual relasi antara hari dengan tingkat permintaan (Rendah, Sedang, Tinggi)</p>
+              </div>
+            </div>
+            <DemandHeatmap clusteredData={clusteredData} />
+          </DarkCard>
+        </div>
+      )}
 
       {/* ── K-Means Report & Daily Cluster Table ── */}
       {clusteredData.length > 0 && (
