@@ -232,6 +232,8 @@ export default function History({ onViewDataset }) {
           </div>
         </div>
 
+        // cek prubahanan di atas, terutama pada bagian filter aktivitas dan dataset, serta tampilan kartu statistik. Pastikan semua fungsi berjalan dengan baik dan data ditampilkan sesuai dengan yang diharapkan.
+
         {/* ── Activity Tab ───────────────────────────────────────────────────── */}
         {activeTab === "activity" && (
           <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
