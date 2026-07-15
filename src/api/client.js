@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://prediksi-penjualan-be-production.up.railway.app";
+export const API_BASE_URL = "https://web-production-1324d.up.railway.app";
 
 const TOKEN_KEY = "sawangan-token";
 const USER_KEY = "sawangan-user";
